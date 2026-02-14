@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [result, setResult] = useState<SimulationSummary | null>(null);
   const [showTable, setShowTable] = useState(false);
 
-  // Calcula inicialmente para não abrir a tela vazia
   useEffect(() => {
     handleCalculate();
   }, []);
@@ -162,7 +161,7 @@ const App: React.FC = () => {
                     <TrendingUp className="mr-3 text-emerald-500" /> Evolução do Patrimônio
                   </h2>
                   <div className="h-[400px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" debounce={100}>
                       <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -186,6 +185,7 @@ const App: React.FC = () => {
                           strokeWidth={4} 
                           fillOpacity={1} 
                           fill="url(#colorTotal)" 
+                          isAnimationActive={true}
                         />
                         <Area 
                           type="monotone" 
