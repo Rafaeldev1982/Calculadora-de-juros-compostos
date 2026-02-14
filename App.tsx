@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  Calculator, TrendingUp, RefreshCcw, Table as TableIcon, ChevronDown, ChevronUp, DollarSign
+  Calculator, TrendingUp, RefreshCcw, Table as TableIcon, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { SimulationInputs, SimulationSummary } from './types.ts';
 import { calculateCompoundInterest, formatCurrency } from './utils/finance.ts';
@@ -23,33 +23,32 @@ const App: React.FC = () => {
   const [result, setResult] = useState<SimulationSummary | null>(null);
   const [showTable, setShowTable] = useState(false);
 
-  // Calcula automaticamente ao carregar ou mudar inputs
+  // Calcula inicialmente para não abrir a tela vazia
   useEffect(() => {
-    setResult(calculateCompoundInterest(inputs));
+    handleCalculate();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const updatedInputs = {
-      ...inputs,
+    setInputs(prev => ({
+      ...prev,
       [name]: name === 'rateType' || name === 'periodType' ? value : parseFloat(value) || 0,
-    };
-    setInputs(updatedInputs);
+    }));
   };
 
-  const handleCalculate = (e: React.FormEvent) => {
-    e.preventDefault();
-    setResult(calculateCompoundInterest(inputs));
+  const handleCalculate = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const res = calculateCompoundInterest(inputs);
+    setResult(res);
   };
 
   const handleClear = () => {
     setInputs({ initialValue: 0, monthlyValue: 0, interestRate: 0, period: 1, rateType: 'yearly', periodType: 'yearly' });
-    setResult(null);
   };
 
   const chartData = useMemo(() => {
     if (!result) return [];
-    const step = Math.max(1, Math.floor(result.results.length / 30));
+    const step = Math.max(1, Math.floor(result.results.length / 50));
     return result.results.filter((_, idx) => idx % step === 0 || idx === result.results.length - 1);
   }, [result]);
 
@@ -63,7 +62,7 @@ const App: React.FC = () => {
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4">SimuJuros</h1>
           <p className="text-emerald-100/60 text-lg max-w-xl mx-auto font-medium">
-            Projete seu futuro financeiro com a melhor calculadora de juros compostos.
+            Projete seu futuro financeiro com precisão e clareza.
           </p>
         </div>
       </header>
@@ -129,11 +128,11 @@ const App: React.FC = () => {
               </div>
 
               <div className="pt-4 space-y-3">
-                <button type="submit" className="w-full bg-emerald-500 text-white py-5 rounded-2xl font-extrabold text-lg hover:bg-emerald-600 shadow-xl shadow-emerald-500/30 transition-all active:scale-95">
+                <button type="submit" className="w-full bg-emerald-500 text-white py-5 rounded-2xl font-extrabold text-lg hover:bg-emerald-600 shadow-xl shadow-emerald-500/30 transition-all active:scale-[0.98] flex items-center justify-center">
                   Simular Agora
                 </button>
                 <button type="button" onClick={handleClear} className="w-full text-slate-400 py-2 text-sm font-bold hover:text-slate-600 transition-colors flex items-center justify-center">
-                  <RefreshCcw size={14} className="mr-2" /> Resetar
+                  <RefreshCcw size={14} className="mr-2" /> Resetar campos
                 </button>
               </div>
             </form>
@@ -158,13 +157,13 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-xl">
+                <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-xl min-h-[500px]">
                   <h2 className="text-xl font-bold text-slate-800 mb-10 flex items-center">
                     <TrendingUp className="mr-3 text-emerald-500" /> Evolução do Patrimônio
                   </h2>
-                  <div className="h-[400px]">
+                  <div className="h-[400px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
@@ -176,10 +175,27 @@ const App: React.FC = () => {
                         <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v/1000}k`} />
                         <Tooltip 
                           formatter={(value: any) => formatCurrency(value)}
+                          labelFormatter={(label) => `Mês ${label}`}
                           contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', padding: '15px' }}
                         />
-                        <Area type="monotone" dataKey="totalAmount" name="Montante" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" />
-                        <Area type="monotone" dataKey="totalInvested" name="Investido" stroke="#1e293b" strokeWidth={2} strokeDasharray="5 5" fill="transparent" />
+                        <Area 
+                          type="monotone" 
+                          dataKey="totalAmount" 
+                          name="Montante Total" 
+                          stroke="#10b981" 
+                          strokeWidth={4} 
+                          fillOpacity={1} 
+                          fill="url(#colorTotal)" 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="totalInvested" 
+                          name="Capital Investido" 
+                          stroke="#1e293b" 
+                          strokeWidth={2} 
+                          strokeDasharray="5 5" 
+                          fill="transparent" 
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -188,7 +204,7 @@ const App: React.FC = () => {
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-lg overflow-hidden">
                   <button onClick={() => setShowTable(!showTable)} className="w-full flex items-center justify-between p-8 hover:bg-slate-50 transition-colors">
                     <span className="font-bold text-slate-800 flex items-center">
-                      <TableIcon className="mr-3 text-emerald-500" /> Tabela de Memória de Cálculo
+                      <TableIcon className="mr-3 text-emerald-500" /> Tabela Detalhada
                     </span>
                     {showTable ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
                   </button>
@@ -227,7 +243,7 @@ const App: React.FC = () => {
       <footer className="bg-indigo-950 text-slate-500 py-16 text-center border-t border-white/5">
         <div className="container mx-auto px-4">
           <p className="font-bold text-white/20 text-2xl mb-4 italic">SimuJuros</p>
-          <p className="text-sm">© {new Date().getFullYear()} Desenvolvido para educação financeira.</p>
+          <p className="text-sm">© {new Date().getFullYear()} SimuJuros - Educação Financeira</p>
         </div>
       </footer>
     </div>
