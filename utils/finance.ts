@@ -1,16 +1,13 @@
 
-import { SimulationInputs, SimulationSummary, SimulationResult } from '../types';
+import { SimulationInputs, SimulationSummary, SimulationResult } from '../types.ts';
 
 export const calculateCompoundInterest = (inputs: SimulationInputs): SimulationSummary => {
   const { initialValue, monthlyValue, interestRate, period, rateType, periodType } = inputs;
 
-  // Convert period to months
   const totalMonths = periodType === 'yearly' ? period * 12 : period;
-
-  // Convert rate to decimal monthly rate
+  
   let monthlyRate: number;
   if (rateType === 'yearly') {
-    // Equivalent monthly rate from annual: (1 + i_a)^(1/12) - 1
     monthlyRate = Math.pow(1 + interestRate / 100, 1 / 12) - 1;
   } else {
     monthlyRate = interestRate / 100;
@@ -21,7 +18,6 @@ export const calculateCompoundInterest = (inputs: SimulationInputs): SimulationS
   let totalInvested = initialValue;
   let accumulatedInterest = 0;
 
-  // Initial state (Month 0)
   results.push({
     month: 0,
     interest: 0,
